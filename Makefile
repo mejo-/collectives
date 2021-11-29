@@ -160,6 +160,8 @@ build: node-modules build-js-production
 		$(OCC) integrity:sign-app --privateKey="$(CERT_DIR)/$(APP_NAME).key" \
 			--certificate="$(CERT_DIR)/$(APP_NAME).crt" \
 			--path="$(RELEASE_DIR)/$(APP_NAME)"; \
+	else \
+		echo "No certificates found. Cannot sign code."; \
 	fi
 	tar -czf $(RELEASE_DIR)/$(APP_NAME)-$(VERSION).tar.gz \
 		-C $(RELEASE_DIR) $(APP_NAME)
@@ -168,10 +170,15 @@ build: node-modules build-js-production
 		echo "Signing release tarball…"; \
 		openssl dgst -sha512 -sign $(CERT_DIR)/$(APP_NAME).key \
 			$(RELEASE_DIR)/$(APP_NAME)-$(VERSION).tar.gz | openssl base64; \
+	else \
+		echo "No certificates found. Cannot sign release."; \
 	fi
 	rm -rf $(RELEASE_DIR)/collectives
 
 release-checks:
+ifneq ($(GIT_REMOTE),)
+	$(error Could not figure out git remote. Please use `git branch --set-upstream-to=`)
+endif
 ifneq ($(VERSION),$(VERSION_CHANGELOG))
 	$(error Version missmatch between `appinfo/info.xml`: $(VERSION) and `CHANGELOG.md`: $(VERSION_CHANGELOG))
 endif
